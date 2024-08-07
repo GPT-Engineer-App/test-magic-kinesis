@@ -1,36 +1,40 @@
 import { useState, useEffect } from "react";
-import { Cat, Heart, Info, Paw, Moon, Sun } from "lucide-react";
+import { Cat, Heart, Info, Paw, Moon, Sun, Star, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const catBreeds = [
-  { name: "Siamese", description: "Known for their distinctive color points and blue eyes.", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg" },
-  { name: "Persian", description: "Recognized for their long, luxurious coat and flat face.", image: "https://upload.wikimedia.org/wikipedia/commons/1/15/White_Persian_Cat.jpg" },
-  { name: "Maine Coon", description: "One of the largest domestic cat breeds with a distinctive ruff.", image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Maine_Coon_cat_by_Tomitheos.JPG" },
-  { name: "British Shorthair", description: "Famous for their round faces and dense, plush coats.", image: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Britishblue.jpg" },
-  { name: "Scottish Fold", description: "Characterized by their unique folded ears and owl-like appearance.", image: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Adult_Scottish_Fold.jpg" },
+  { name: "Siamese", description: "Known for their distinctive color points and blue eyes.", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg", popularity: 85 },
+  { name: "Persian", description: "Recognized for their long, luxurious coat and flat face.", image: "https://upload.wikimedia.org/wikipedia/commons/1/15/White_Persian_Cat.jpg", popularity: 90 },
+  { name: "Maine Coon", description: "One of the largest domestic cat breeds with a distinctive ruff.", image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Maine_Coon_cat_by_Tomitheos.JPG", popularity: 88 },
+  { name: "British Shorthair", description: "Famous for their round faces and dense, plush coats.", image: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Britishblue.jpg", popularity: 82 },
+  { name: "Scottish Fold", description: "Characterized by their unique folded ears and owl-like appearance.", image: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Adult_Scottish_Fold.jpg", popularity: 80 },
 ];
 
 const catFacts = [
-  "Cats spend approximately 70% of their lives sleeping!",
-  "A group of cats is called a 'clowder'.",
-  "Cats have over 20 vocalizations, including the meow!",
-  "A cat's nose print is unique, like a human's fingerprint.",
-  "Cats can rotate their ears 180 degrees.",
+  { fact: "Cats spend approximately 70% of their lives sleeping!", icon: "🛌" },
+  { fact: "A group of cats is called a 'clowder'.", icon: "👥" },
+  { fact: "Cats have over 20 vocalizations, including the meow!", icon: "🗣️" },
+  { fact: "A cat's nose print is unique, like a human's fingerprint.", icon: "👃" },
+  { fact: "Cats can rotate their ears 180 degrees.", icon: "👂" },
 ];
 
 const Index = () => {
   const [likes, setLikes] = useState(0);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedBreed, setSelectedBreed] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFactIndex((prevIndex) => (prevIndex + 1) % catFacts.length);
-    }, 10000);
+    }, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -41,22 +45,25 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-purple-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'} p-8 transition-colors duration-500`}>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <motion.h1 
-            className="text-5xl font-bold flex items-center justify-center text-purple-800 dark:text-purple-300"
+            className="text-6xl font-bold flex items-center justify-center text-purple-800 dark:text-purple-300"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Cat className="mr-3 text-pink-600 dark:text-pink-400" size={48} /> Feline Fascination
+            <Cat className="mr-3 text-pink-600 dark:text-pink-400" size={56} /> 
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-300 dark:to-pink-300">
+              Feline Fascination
+            </span>
           </motion.h1>
-          <Button variant="outline" size="icon" onClick={toggleDarkMode}>
-            {isDarkMode ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+          <Button variant="outline" size="icon" onClick={toggleDarkMode} className="rounded-full p-2">
+            {isDarkMode ? <Sun className="h-[1.5rem] w-[1.5rem]" /> : <Moon className="h-[1.5rem] w-[1.5rem]" />}
           </Button>
         </div>
 
-        <Carousel className="mb-8">
+        <Carousel className="mb-12">
           <CarouselContent>
             {catBreeds.map((breed, index) => (
               <CarouselItem key={index}>
@@ -64,13 +71,17 @@ const Index = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
+                  className="relative"
                 >
                   <img
                     src={breed.image}
                     alt={breed.name}
-                    className="mx-auto object-cover w-full h-[500px] rounded-xl shadow-2xl"
+                    className="mx-auto object-cover w-full h-[600px] rounded-xl shadow-2xl"
                   />
-                  <p className="text-center mt-2 text-lg font-semibold">{breed.name}</p>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6 rounded-b-xl">
+                    <h3 className="text-3xl font-bold text-white mb-2">{breed.name}</h3>
+                    <p className="text-lg text-gray-200">{breed.description}</p>
+                  </div>
                 </motion.div>
               </CarouselItem>
             ))}
@@ -79,41 +90,44 @@ const Index = () => {
           <CarouselNext />
         </Carousel>
 
-        <Card className="mb-8">
+        <Card className="mb-12">
           <CardHeader>
-            <CardTitle>The Enigmatic World of Cats</CardTitle>
-            <CardDescription>Discover the charm and mystery of our feline friends</CardDescription>
+            <CardTitle className="text-3xl">The Enigmatic World of Cats</CardTitle>
+            <CardDescription className="text-lg">Uncover the charm and mystery of our feline companions</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
               Cats have captivated humans for millennia with their grace, independence, and affectionate nature. These enigmatic creatures continue to be one of the most popular pets worldwide, cherished for their companionship and unique personalities.
             </p>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="bg-purple-100 dark:bg-purple-900 p-4 rounded-lg shadow-inner"
+              className="bg-purple-100 dark:bg-purple-900 p-6 rounded-lg shadow-inner"
             >
-              <h3 className="font-semibold mb-2 flex items-center">
-                <Info className="mr-2 text-blue-500" /> Did You Know?
+              <h3 className="font-semibold text-2xl mb-4 flex items-center">
+                <Star className="mr-3 text-yellow-500" size={28} /> Fascinating Feline Fact
               </h3>
               <AnimatePresence mode="wait">
-                <motion.p
+                <motion.div
                   key={currentFactIndex}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
-                  className="text-gray-700 dark:text-gray-300"
+                  className="flex items-start"
                 >
-                  {catFacts[currentFactIndex]}
-                </motion.p>
+                  <span className="text-4xl mr-4">{catFacts[currentFactIndex].icon}</span>
+                  <p className="text-xl text-gray-700 dark:text-gray-300">
+                    {catFacts[currentFactIndex].fact}
+                  </p>
+                </motion.div>
               </AnimatePresence>
             </motion.div>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" onClick={() => setLikes(likes + 1)} className="group">
-              <Heart className="mr-2 h-4 w-4 group-hover:text-red-500 transition-colors duration-300" />
+          <CardFooter className="justify-between items-center">
+            <Button variant="outline" onClick={() => setLikes(likes + 1)} className="group text-lg px-6 py-3">
+              <Heart className="mr-2 h-6 w-6 group-hover:text-red-500 transition-colors duration-300" />
               <span className="mr-2">Like</span>
               <motion.span
                 key={likes}
@@ -124,27 +138,43 @@ const Index = () => {
                 ({likes})
               </motion.span>
             </Button>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              Fact {currentFactIndex + 1} of {catFacts.length}
+            </Badge>
           </CardFooter>
         </Card>
 
-        <Tabs defaultValue="characteristics" className="mb-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="characteristics">Characteristics</TabsTrigger>
+        <Tabs defaultValue="characteristics" className="mb-12">
+          <TabsList className="grid w-full grid-cols-2 text-lg">
+            <TabsTrigger value="characteristics">Feline Features</TabsTrigger>
             <TabsTrigger value="breeds">Popular Breeds</TabsTrigger>
           </TabsList>
           <TabsContent value="characteristics">
             <Card>
               <CardHeader>
-                <CardTitle>Feline Features</CardTitle>
-                <CardDescription>What makes cats unique?</CardDescription>
+                <CardTitle className="text-2xl">Unique Feline Characteristics</CardTitle>
+                <CardDescription className="text-lg">Discover what makes cats truly special</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                  <li>Retractable claws for hunting and climbing</li>
-                  <li>Exceptional balance and agility</li>
-                  <li>Acute hearing and night vision</li>
-                  <li>Complex vocal communication</li>
-                  <li>Independent yet affectionate nature</li>
+                <ul className="space-y-4 text-lg text-gray-700 dark:text-gray-300">
+                  {[
+                    { feature: "Retractable claws for hunting and climbing", icon: "🐾" },
+                    { feature: "Exceptional balance and agility", icon: "🤸" },
+                    { feature: "Acute hearing and night vision", icon: "👂👁️" },
+                    { feature: "Complex vocal communication", icon: "🗣️" },
+                    { feature: "Independent yet affectionate nature", icon: "🐱❤️" },
+                  ].map((item, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="flex items-center"
+                    >
+                      <span className="text-2xl mr-4">{item.icon}</span>
+                      {item.feature}
+                    </motion.li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -152,16 +182,27 @@ const Index = () => {
           <TabsContent value="breeds">
             <Card>
               <CardHeader>
-                <CardTitle>Diverse Cat Breeds</CardTitle>
-                <CardDescription>Explore some popular feline varieties</CardDescription>
+                <CardTitle className="text-2xl">Diverse Cat Breeds</CardTitle>
+                <CardDescription className="text-lg">Explore the fascinating world of feline varieties</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {catBreeds.map((breed, index) => (
-                    <div key={index} className="bg-white p-4 rounded-lg shadow">
-                      <h3 className="font-semibold text-lg mb-2">{breed.name}</h3>
-                      <p className="text-sm text-gray-600">{breed.description}</p>
-                    </div>
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+                      onClick={() => setSelectedBreed(breed)}
+                    >
+                      <h3 className="font-semibold text-xl mb-3 text-purple-700 dark:text-purple-300">{breed.name}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">{breed.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Popularity</span>
+                        <Progress value={breed.popularity} className="w-2/3" />
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
@@ -169,30 +210,67 @@ const Index = () => {
           </TabsContent>
         </Tabs>
 
+        {selectedBreed && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setSelectedBreed(null)}
+          >
+            <Card className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle className="text-3xl">{selectedBreed.name}</CardTitle>
+                <CardDescription className="text-lg">{selectedBreed.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <img src={selectedBreed.image} alt={selectedBreed.name} className="w-full h-64 object-cover rounded-lg mb-4" />
+                <Progress value={selectedBreed.popularity} className="mb-2" />
+                <p className="text-right text-sm text-gray-500">Popularity: {selectedBreed.popularity}%</p>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => setSelectedBreed(null)}>Close</Button>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        )}
+
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Paw className="mr-2 text-orange-500" /> Cat Care Tips
+            <CardTitle className="flex items-center text-2xl">
+              <Paw className="mr-3 text-orange-500" size={28} /> Essential Cat Care Tips
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
+            <ul className="space-y-4">
               {[
-                "Provide fresh water daily",
-                "Schedule regular vet check-ups",
-                "Offer a balanced diet",
-                "Ensure plenty of playtime",
-                "Keep the litter box clean"
-              ].map((tip, index) => (
+                { tip: "Provide fresh water daily", icon: "💧" },
+                { tip: "Schedule regular vet check-ups", icon: "🩺" },
+                { tip: "Offer a balanced diet", icon: "🍽️" },
+                { tip: "Ensure plenty of playtime", icon: "🧶" },
+                { tip: "Keep the litter box clean", icon: "🧹" }
+              ].map((item, index) => (
                 <motion.li
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="flex items-center text-gray-700 dark:text-gray-300"
+                  className="flex items-center text-lg text-gray-700 dark:text-gray-300"
                 >
-                  <Paw className="mr-2 h-4 w-4 text-orange-500" />
-                  {tip}
+                  <span className="text-2xl mr-4">{item.icon}</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help">{item.tip}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click for more info</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button variant="ghost" size="sm" className="ml-auto">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </motion.li>
               ))}
             </ul>
