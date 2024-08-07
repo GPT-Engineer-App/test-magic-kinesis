@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Cat, Heart, Info, Paw, Moon, Sun, Star, ArrowRight, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { Cat, Heart, Info, Paw, Moon, Sun, Star, ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useInView } from "react-intersection-observer";
 
 const catBreeds = [
   { name: "Siamese", description: "Known for their distinctive color points and blue eyes.", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg", popularity: 85 },
@@ -33,6 +34,16 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedBreed, setSelectedBreed] = useState(null);
   const [isSparkleVisible, setIsSparkleVisible] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const scrollRef = useRef(null);
+
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -54,11 +65,74 @@ const Index = () => {
     document.documentElement.classList.toggle('dark');
   };
 
+  const scrollToContent = () => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-purple-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'} p-8 transition-colors duration-500`}>
-      <ScrollArea className="h-[100vh] w-full pr-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8 sticky top-0 z-10 bg-opacity-80 backdrop-blur-md p-4 rounded-lg">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-purple-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'} transition-colors duration-500`}>
+      <ScrollArea className="h-[100vh] w-full">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="h-screen flex flex-col justify-center items-center relative"
+            style={{ opacity, scale }}
+          >
+            <motion.h1 
+              className="text-6xl sm:text-8xl font-bold flex items-center justify-center text-purple-800 dark:text-purple-300 mb-8"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Cat className="mr-3 text-pink-600 dark:text-pink-400" size={56} /> 
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-300 dark:to-pink-300">
+                Feline Fascination
+              </span>
+              <AnimatePresence>
+                {isSparkleVisible && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="ml-2"
+                  >
+                    <Sparkles className="text-yellow-400" size={32} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.h1>
+            <motion.p
+              className="text-xl sm:text-2xl text-center text-gray-700 dark:text-gray-300 mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              Embark on a journey through the captivating world of cats
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Button 
+                size="lg" 
+                onClick={scrollToContent}
+                className="text-lg px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Explore Now
+              </Button>
+            </motion.div>
+            <motion.div 
+              className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
+              animate={{ y: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              <ChevronDown size={32} className="text-purple-600 dark:text-purple-400" />
+            </motion.div>
+          </motion.div>
+
+          <div ref={scrollRef} className="py-16">
+            <div className="flex justify-between items-center mb-8 sticky top-0 z-10 bg-opacity-80 backdrop-blur-md p-4 rounded-lg">
             <motion.h1 
               className="text-6xl font-bold flex items-center justify-center text-purple-800 dark:text-purple-300"
               initial={{ opacity: 0, y: -50 }}
@@ -88,109 +162,122 @@ const Index = () => {
             </Button>
           </div>
 
-          <Carousel className="mb-12">
-            <CarouselContent>
-              {catBreeds.map((breed, index) => (
-                <CarouselItem key={index}>
+          <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 50 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            <Carousel className="mb-12">
+              <CarouselContent>
+                {catBreeds.map((breed, index) => (
+                  <CarouselItem key={index}>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                      className="relative group"
+                    >
+                      <img
+                        src={breed.image}
+                        alt={breed.name}
+                        className="mx-auto object-cover w-full h-[600px] rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <motion.div 
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6 rounded-b-xl"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                      >
+                        <h3 className="text-3xl font-bold text-white mb-2">{breed.name}</h3>
+                        <p className="text-lg text-gray-200">{breed.description}</p>
+                      </motion.div>
+                    </motion.div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="mb-12 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-3xl">The Enigmatic World of Cats</CardTitle>
+                <CardDescription className="text-lg">Uncover the charm and mystery of our feline companions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <motion.p 
+                  className="text-xl text-gray-700 dark:text-gray-300 mb-6 leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Cats have captivated humans for millennia with their grace, independence, and affectionate nature. These enigmatic creatures continue to be one of the most popular pets worldwide, cherished for their companionship and unique personalities.
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-purple-100 dark:bg-purple-900 p-6 rounded-lg shadow-inner relative overflow-hidden"
+                >
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="relative group"
-                  >
-                    <img
-                      src={breed.image}
-                      alt={breed.name}
-                      className="mx-auto object-cover w-full h-[600px] rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <motion.div 
-                      className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6 rounded-b-xl"
+                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  />
+                  <h3 className="font-semibold text-2xl mb-4 flex items-center">
+                    <Star className="mr-3 text-yellow-500" size={28} /> Fascinating Feline Fact
+                  </h3>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentFactIndex}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.2 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="flex items-start"
                     >
-                      <h3 className="text-3xl font-bold text-white mb-2">{breed.name}</h3>
-                      <p className="text-lg text-gray-200">{breed.description}</p>
+                      <span className="text-4xl mr-4">{catFacts[currentFactIndex].icon}</span>
+                      <p className="text-xl text-gray-700 dark:text-gray-300">
+                        {catFacts[currentFactIndex].fact}
+                      </p>
                     </motion.div>
-                  </motion.div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-
-          <Card className="mb-12 overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-3xl">The Enigmatic World of Cats</CardTitle>
-              <CardDescription className="text-lg">Uncover the charm and mystery of our feline companions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <motion.p 
-                className="text-xl text-gray-700 dark:text-gray-300 mb-6 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                Cats have captivated humans for millennia with their grace, independence, and affectionate nature. These enigmatic creatures continue to be one of the most popular pets worldwide, cherished for their companionship and unique personalities.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="bg-purple-100 dark:bg-purple-900 p-6 rounded-lg shadow-inner relative overflow-hidden"
-              >
-                <motion.div
-                  className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                />
-                <h3 className="font-semibold text-2xl mb-4 flex items-center">
-                  <Star className="mr-3 text-yellow-500" size={28} /> Fascinating Feline Fact
-                </h3>
-                <AnimatePresence mode="wait">
+                  </AnimatePresence>
+                </motion.div>
+              </CardContent>
+              <CardFooter className="justify-between items-center">
+                <Button variant="outline" onClick={() => setLikes(likes + 1)} className="group text-lg px-6 py-3 relative overflow-hidden">
                   <motion.div
-                    key={currentFactIndex}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex items-start"
+                    className="absolute inset-0 bg-red-100 dark:bg-red-900"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: likes > 0 ? 1 : 0, opacity: likes > 0 ? 1 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  <Heart className="mr-2 h-6 w-6 group-hover:text-red-500 transition-colors duration-300 relative z-10" />
+                  <span className="mr-2 relative z-10">Like</span>
+                  <motion.span
+                    key={likes}
+                    initial={{ scale: 1.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative z-10"
                   >
-                    <span className="text-4xl mr-4">{catFacts[currentFactIndex].icon}</span>
-                    <p className="text-xl text-gray-700 dark:text-gray-300">
-                      {catFacts[currentFactIndex].fact}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-              </motion.div>
-            </CardContent>
-            <CardFooter className="justify-between items-center">
-              <Button variant="outline" onClick={() => setLikes(likes + 1)} className="group text-lg px-6 py-3 relative overflow-hidden">
-                <motion.div
-                  className="absolute inset-0 bg-red-100 dark:bg-red-900"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: likes > 0 ? 1 : 0, opacity: likes > 0 ? 1 : 0 }}
-                  transition={{ duration: 0.3 }}
-                />
-                <Heart className="mr-2 h-6 w-6 group-hover:text-red-500 transition-colors duration-300 relative z-10" />
-                <span className="mr-2 relative z-10">Like</span>
-                <motion.span
-                  key={likes}
-                  initial={{ scale: 1.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative z-10"
-                >
-                  ({likes})
-                </motion.span>
-              </Button>
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                Fact {currentFactIndex + 1} of {catFacts.length}
-              </Badge>
-            </CardFooter>
-          </Card>
+                    ({likes})
+                  </motion.span>
+                </Button>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  Fact {currentFactIndex + 1} of {catFacts.length}
+                </Badge>
+              </CardFooter>
+            </Card>
+          </motion.div>
 
           <Tabs defaultValue="characteristics" className="mb-12">
             <TabsList className="grid w-full grid-cols-2 text-lg">
